@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <link rel="icon" sizes="64x64" href="yen.ico">
+    <meta charset="UTF-8">
+    <title>CAJA FUERTE DEL MAESTRO REIGEN</title>
+    <style>
+        @font-face {font-family:'Mob200';src:url('Mob200.ttf') format('truetype');}
+        body{background:#000;color:#0f0;font-family:"Courier New",monospace;min-height:100vh;overflow-x:hidden;
+            background:radial-gradient(circle at 50% 50%, #001a00, #000)}
+        h1{font-size:70px;color:#00ff00;text-shadow:0 0 60px lime;letter-spacing:10px;text-align:center;margin:40px}
+        .total{font-family:'Mob200',sans-serif;font-size:140px;color:#ff00ff;text-shadow:0 0 80px magenta;text-align:center;margin:50px 0}
+        table{width:90%;margin:0 auto;border-collapse:collapse;font-size:22px}
+        th,td{padding:15px;border:4px solid #00ff00;text-align:center}
+        th{background:#001100;color:#ff00ff;font-size:28px}
+        td{background:#000911;color:#00ffff}
+        .container{max-width:1200px;margin:0 auto;padding:20px}
+        .reigen{position:fixed;bottom:20px;right:20px;width:380px;border:10px solid gold;box-shadow:0 0 100px gold;border-radius:20px}
+        .warning{position:fixed;top:10px;left:50%;transform:translateX(-50%);background:#300;color:#f00;padding:10px 30px;
+                 border:5px double #f00;font-size:24px;animation:blink 1s infinite}
+        @keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+    </style>
+</head>
+<body>
+
+<div class="warning">ACCESO RESTRINGIDO - SOLO EL MAESTRO REIGEN</div>
+
+<div class="container">
+    <h1>CAJA FUERTE DEL MAESTRO</h1>
+    <div class="total" id="total">¥ 0</div>
+
+    <table id="tabla-ventas">
+        <tr><th>Fecha</th><th>Hora</th><th>Servicio</th><th>Precio</th></tr>
+    </table>
+
+    <img src="https://media.tenor.com/x8v1oNUoA6IAAAAC/reigen-salt.gif" class="reigen">
+</div>
+
+<script>
+// PROTECCIÓN: solo con modo Reigen
+if (localStorage.getItem('modoReigenActivado') !== 'true') {
+    alert("ACCESO DENEGADO\n\nSolo el Maestro Reigen puede ver sus verdaderas ganancias.");
+    window.location.href = "index.html";
+}
+
+// Cargar ventas reales
+function mostrarGanancias() {
+    const ventas = JSON.parse(localStorage.getItem('ventasReigen') || '[]');
+    const tabla = document.getElementById('tabla-ventas');
+    let total = 0;
+
+    if (ventas.length === 0) {
+        tabla.innerHTML += `<tr><td colspan="4" style="color:#666;font-size:30px">Aún no hay ventas... ¡El Maestro necesita clientes!</td></tr>`;
+    } else {
+        ventas.reverse().forEach(v => {
+            total += v.precio;
+            tabla.innerHTML += `
+                <tr>
+                    <td>${v.fecha}</td>
+                    <td>${v.hora}</td>
+                    <td>${v.servicio}</td>
+                    <td style="color:gold;font-weight:bold">¥ ${v.precio.toLocaleString()}</td>
+                </tr>
+            `;
+        });
+    }
+
+    document.getElementById('total').textContent = `¥ ${total.toLocaleString()}`;
+}
+
+// Animación de contador
+let displayed = 0;
+const finalTotal = () => {
+    const ventas = JSON.parse(localStorage.getItem('ventasReigen') || '[]');
+    return ventas.reduce((sum, v) => sum + v.precio, 0);
+};
+
+const animarContador = setInterval(() => {
+    const real = finalTotal();
+    if (displayed >= real) {
+        displayed = real;
+        clearInterval(animarContador);
+    } else {
+        displayed += Math.floor(real / 50) || 3500;
+        if (displayed > real) displayed = real;
+    }
+    document.getElementById('total').textContent = `¥ ${displayed.toLocaleString()}`;
+}, 70);
+
+mostrarGanancias();
+
+// Efecto dinero cayendo
+setInterval(() => {
+    if (Math.random() > 0.7) {
+        const y = document.createElement('div');
+        y.textContent = '¥';
+        y.style.cssText = `position:fixed;left:${Math.random()*100}vw;top:-50px;font-size:${40+Math.random()*30}px;
+                           color:#0f0;text-shadow:0 0 20px lime;animation:fall 4s linear forwards;z-index:9999`;
+        document.body.appendChild(y);
+        setTimeout(() => y.remove(), 4000);
+    }
+}, 400);
+
+const style = document.createElement('style');
+style.textContent = `@keyframes fall{to{transform:translateY(110vh) rotate(720deg);opacity:0}}`;
+document.head.appendChild(style);
+</script>
+
+</body>
+</html>
